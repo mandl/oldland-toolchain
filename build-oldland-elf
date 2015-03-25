@@ -1,0 +1,51 @@
+#!/bin/bash
+set -e
+HERE=$(realpath $(dirname $0))
+INSTALL_PATH=${HERE}/install
+mkdir -p $INSTALL_PATH
+
+cd $HERE
+echo "[+] updating submodules"
+git submodule init
+git submodule update
+
+echo "[+] build binutils-gdb-oldland"
+(
+	mkdir -p BUILD/binutils-oldland-elf
+	cd BUILD/binutils-oldland-elf
+	../../binutils-gdb-oldland/configure --target=oldland-elf \
+		--prefix=$INSTALL_PATH
+	make
+	make install
+)
+
+echo "[+] build initial gcc"
+(
+	mkdir -p BUILD/gcc-oldland-elf
+	cd BUILD/gcc-oldland-elf
+	../../gcc-oldland/configure --target=oldland-elf --disable-libquadmath \
+		--disable-libssp --enable-languages=c --prefix=$INSTALL_PATH \
+		--disable-shared --with-headers --enable-multilib --with-newlib
+	make all-gcc
+	make install-gcc
+)
+
+echo "[+] build newlib"
+(
+	mkdir -p BUILD/newlib-oldland-elf
+	cd BUILD/newlib-oldland-elf
+	../../newlib-oldland/configure --target=oldland-elf --with-newlib \
+		--prefix=$INSTALL_PATH
+	make
+	make install
+)
+
+echo "[+] build gcc"
+(
+	cd BUILD/gcc-oldland-elf
+	make
+	make install
+)
+
+echo "[+] done"
+echo "Run \". oldland-toolchain-env\" to add the tools to your environment."

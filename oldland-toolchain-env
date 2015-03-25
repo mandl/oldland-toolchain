@@ -1,0 +1,2 @@
+HERE=$(realpath $(dirname ${BASH_SOURCE[0]}))
+export PATH=$HERE/install/bin:$PATH
